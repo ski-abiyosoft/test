@@ -24,7 +24,16 @@ jobs:
             exit 1
           fi
           echo "✅ Tidak ada konflik. Lanjutkan."
-
+          
+      - name: Detect Merge Conflict Markers
+        run: |
+          if grep -rnI "<<<<<<<" .; then
+            echo "🚨 Terdeteksi konflik di kode, tolong selesaikan!"
+            exit 1
+          else
+            echo "✅ Tidak ada konflik yang terdeteksi."
+          fi
+          
   deployment:
     name: Deploy to Server
     needs: verification
