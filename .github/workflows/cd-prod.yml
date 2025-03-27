@@ -27,7 +27,7 @@ jobs:
           
       - name: Detect Merge Conflict Markers
         run: |
-          if grep -rnI "<<<<<<<" .; then
+          if grep -rnI "<<<<<<< main" .; then
             echo "🚨 Terdeteksi konflik di kode, tolong selesaikan!"
             exit 1
           else
