@@ -1,2 +1,6 @@
 <?php
-echo "Selamat datang di branch FEATURE!";
+<<<<<<< HEAD
+echo "Versi lama";
+=======
+echo "Versi baru";
+>>>>>>> feature
