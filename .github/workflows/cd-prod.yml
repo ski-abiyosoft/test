@@ -37,7 +37,7 @@ jobs:
           echo "📂 File yang diubah:"
           echo "$CHANGED_FILES"
 
-          echo "$CHANGED_FILES" | xargs grep -Hn "<<<<<<<" && {
+          echo "$CHANGED_FILES" | xargs grep -Hn "<<<<<<< HEAD" && {
             echo "🚨 Konflik terdeteksi! Selesaikan sebelum merge."
             exit 1
           } || echo "✅ Tidak ada konflik terdeteksi."
