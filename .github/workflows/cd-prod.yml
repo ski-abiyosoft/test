@@ -16,12 +16,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Ambil semua riwayat commit untuk perbandingan akurat
+          fetch-depth: 0 # Ambil semua riwayat untuk memastikan deteksi akurat
 
       - name: Check for Merge Conflicts
         if: github.event_name == 'pull_request'
         run: |
-          # Ambil branch main jika di pull request
+          # Ambil branch main untuk perbandingan
           git fetch origin main
           
           # Cek apakah ada konflik terhadap main
@@ -33,27 +33,23 @@ jobs:
           
       - name: Detect Merge Conflict Markers
         run: |
-          # Tentukan basis perbandingan (PR vs Push)
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            BASE_SHA=${{ github.event.pull_request.base.sha }}
-          else
-            BASE_SHA=$(git rev-parse HEAD~1) # Ambil commit sebelumnya di push
-          fi
+          # Temukan commit dasar sebelum merge
+          BASE_SHA=$(git merge-base origin/main HEAD)
 
-          # Ambil file yang diubah
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA ${{ github.sha }})
+          # Ambil file yang diubah setelah commit lokal dan pull
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA HEAD)
 
           echo "🔍 File yang diubah:"
           echo "$CHANGED_FILES"
 
-          # Filter: Hanya file php, js, html & abaikan direktori tertentu
+          # Filter hanya file php, js, html dan abaikan direktori tertentu
           FILES_TO_CHECK=$(echo "$CHANGED_FILES" | grep -E '\.(php|js|html)$' | grep -Ev '^(vendor|node_modules|storage)/' || true)
 
           if [ -n "$FILES_TO_CHECK" ]; then
             echo "📂 File yang diperiksa:"
             echo "$FILES_TO_CHECK"
 
-            # Deteksi marker konflik
+            # Deteksi marker konflik di file
             echo "$FILES_TO_CHECK" | xargs grep -Hn "<<<<<<<" && {
               echo "🚨 Terdeteksi konflik! Tolong selesaikan sebelum merge."
               exit 1
