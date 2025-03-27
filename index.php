@@ -1,12 +1,6 @@
 <?php
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
-echo "Test";
+<<<<<<< HEAD
 echo "Selamat datang di branch MAIN!";
+=======
+echo "Selamat datang di branch FEATURE!";
+>>>>>>> feature
