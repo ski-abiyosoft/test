@@ -15,45 +15,22 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Ambil seluruh riwayat commit
 
-      - name: Fetch Main Branch
-        run: |
-          git fetch origin main
-
-      - name: Check for Merge Conflicts
-        if: github.event_name == 'pull_request'
-        run: |
-          # Bandingkan commit HEAD lokal dengan origin/main
-          if ! git merge-base --is-ancestor origin/main HEAD; then
-            echo "🚨 Konflik terdeteksi! Perbaiki sebelum merge."
-            exit 1
-          fi
-          echo "✅ Tidak ada konflik. Lanjutkan."
-          
       - name: Detect Merge Conflict Markers
         run: |
-          # Bandingkan commit HEAD di lokal dengan remote main
-          CHANGED_FILES=$(git diff --name-only origin/main HEAD)
+          # Temukan semua file php, js, html, kecuali di direktori tertentu
+          FILES_TO_CHECK=$(find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.html" \) \
+                          ! -path "./vendor/*" ! -path "./node_modules/*" ! -path "./storage/*")
 
-          echo "🔍 File yang diubah setelah pull:"
-          echo "$CHANGED_FILES"
+          echo "📂 File yang diperiksa:"
+          echo "$FILES_TO_CHECK"
 
-          # Filter hanya file php, js, html dan abaikan direktori tertentu
-          FILES_TO_CHECK=$(echo "$CHANGED_FILES" | grep -E '\.(php|js|html)$' | grep -Ev '^(vendor|node_modules|storage)/' || true)
-
-          if [ -n "$FILES_TO_CHECK" ]; then
-            echo "📂 File yang diperiksa:"
-            echo "$FILES_TO_CHECK"
-
-            # Deteksi marker konflik di file
-            echo "$FILES_TO_CHECK" | xargs grep -Hn "<<<<<<<" && {
-              echo "🚨 Terdeteksi konflik! Tolong selesaikan sebelum merge."
-              exit 1
-            } || echo "✅ Tidak ada konflik yang ditemukan."
+          # Cek apakah ada marker konflik di file
+          if echo "$FILES_TO_CHECK" | xargs grep -Hn "<<<<<<<" ; then
+            echo "🚨 Terdeteksi konflik! Tolong selesaikan sebelum merge."
+            exit 1
           else
-            echo "✅ Tidak ada file PHP, JS, atau HTML yang diubah."
+            echo "✅ Tidak ada konflik yang ditemukan."
           fi
 
   deployment:
