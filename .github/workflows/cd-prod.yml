@@ -16,15 +16,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Ambil semua riwayat untuk memastikan deteksi akurat
+          fetch-depth: 0 # Ambil seluruh riwayat commit
+
+      - name: Fetch Main Branch
+        run: |
+          git fetch origin main
 
       - name: Check for Merge Conflicts
         if: github.event_name == 'pull_request'
         run: |
-          # Ambil branch main untuk perbandingan
-          git fetch origin main
-          
-          # Cek apakah ada konflik terhadap main
+          # Bandingkan commit HEAD lokal dengan origin/main
           if ! git merge-base --is-ancestor origin/main HEAD; then
             echo "🚨 Konflik terdeteksi! Perbaiki sebelum merge."
             exit 1
@@ -33,13 +34,10 @@ jobs:
           
       - name: Detect Merge Conflict Markers
         run: |
-          # Temukan commit dasar sebelum merge
-          BASE_SHA=$(git merge-base origin/main HEAD)
+          # Bandingkan commit HEAD di lokal dengan remote main
+          CHANGED_FILES=$(git diff --name-only origin/main HEAD)
 
-          # Ambil file yang diubah setelah commit lokal dan pull
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA HEAD)
-
-          echo "🔍 File yang diubah:"
+          echo "🔍 File yang diubah setelah pull:"
           echo "$CHANGED_FILES"
 
           # Filter hanya file php, js, html dan abaikan direktori tertentu
@@ -57,7 +55,7 @@ jobs:
           else
             echo "✅ Tidak ada file PHP, JS, atau HTML yang diubah."
           fi
-          
+
   deployment:
     name: Deploy to Server
     needs: verification
