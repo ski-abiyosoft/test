@@ -27,12 +27,20 @@ jobs:
           
       - name: Detect Merge Conflict Markers
         run: |
-          if grep -rnI "<<<<<<< main" .; then
-            echo "🚨 Terdeteksi konflik di kode, tolong selesaikan!"
-            exit 1
-          else
-            echo "✅ Tidak ada konflik yang terdeteksi."
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E '\.(php|js|html)$' || true)
+
+          if [[ -z "$CHANGED_FILES" ]]; then
+            echo "✅ Tidak ada file PHP, JS, HTML yang diubah."
+            exit 0
           fi
+
+          echo "📂 File yang diubah:"
+          echo "$CHANGED_FILES"
+
+          echo "$CHANGED_FILES" | xargs grep -Hn "<<<<<<<" && {
+            echo "🚨 Konflik terdeteksi! Selesaikan sebelum merge."
+            exit 1
+          } || echo "✅ Tidak ada konflik terdeteksi."
           
   deployment:
     name: Deploy to Server
