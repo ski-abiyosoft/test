@@ -21,13 +21,13 @@ jobs:
           FILES_TO_CHECK=$(find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.html" \) \
                           ! -path "./vendor/*" ! -path "./node_modules/*" ! -path "./storage/*")
 
-          echo "📂 File yang terdapat konflik:"
+          echo "📂 Files to check for conflicts:"
 
           if echo "$FILES_TO_CHECK" | xargs grep -Hn "<<<<<<<" ; then
-            echo "🚨 Terdeteksi konflik! Tolong selesaikan sebelum merge."
+            echo "🚨 Conflict detected! Please resolve before merging."
             exit 1
           else
-            echo "✅ Tidak ada konflik yang ditemukan."
+            echo "✅ No conflicts detected."
           fi
 
   deployment:
