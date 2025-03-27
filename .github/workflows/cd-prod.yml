@@ -18,14 +18,11 @@ jobs:
 
       - name: Detect Merge Conflict Markers
         run: |
-          # Temukan semua file php, js, html, kecuali di direktori tertentu
           FILES_TO_CHECK=$(find . -type f \( -name "*.php" -o -name "*.js" -o -name "*.html" \) \
                           ! -path "./vendor/*" ! -path "./node_modules/*" ! -path "./storage/*")
 
-          echo "📂 File yang diperiksa:"
-          echo "$FILES_TO_CHECK"
+          echo "📂 File yang terdapat konflik:"
 
-          # Cek apakah ada marker konflik di file
           if echo "$FILES_TO_CHECK" | xargs grep -Hn "<<<<<<<" ; then
             echo "🚨 Terdeteksi konflik! Tolong selesaikan sebelum merge."
             exit 1
@@ -45,5 +42,4 @@ jobs:
       - name: Deploy to Production Server
         run: |
           echo "🚀 Deploying to production..."
-          # Tambahkan perintah SSH atau deployment Anda di sini
           echo "✅ Success"
