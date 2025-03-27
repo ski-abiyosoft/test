@@ -15,10 +15,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ambil semua riwayat commit untuk perbandingan akurat
 
       - name: Check for Merge Conflicts
+        if: github.event_name == 'pull_request'
         run: |
+          # Ambil branch main jika di pull request
           git fetch origin main
+          
+          # Cek apakah ada konflik terhadap main
           if ! git merge-base --is-ancestor origin/main HEAD; then
             echo "🚨 Konflik terdeteksi! Perbaiki sebelum merge."
             exit 1
@@ -27,20 +33,34 @@ jobs:
           
       - name: Detect Merge Conflict Markers
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E '\.(php|js|html)$' || true)
-
-          if [[ -z "$CHANGED_FILES" ]]; then
-            echo "✅ Tidak ada file PHP, JS, HTML yang diubah."
-            exit 0
+          # Tentukan basis perbandingan (PR vs Push)
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+          else
+            BASE_SHA=$(git rev-parse HEAD~1) # Ambil commit sebelumnya di push
           fi
 
-          echo "📂 File yang diubah:"
+          # Ambil file yang diubah
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA ${{ github.sha }})
+
+          echo "🔍 File yang diubah:"
           echo "$CHANGED_FILES"
 
-          echo "$CHANGED_FILES" | xargs grep -Hn "<<<<<<<" && {
-            echo "🚨 Konflik terdeteksi! Selesaikan sebelum merge."
-            exit 1
-          } || echo "✅ Tidak ada konflik terdeteksi."
+          # Filter: Hanya file php, js, html & abaikan direktori tertentu
+          FILES_TO_CHECK=$(echo "$CHANGED_FILES" | grep -E '\.(php|js|html)$' | grep -Ev '^(vendor|node_modules|storage)/' || true)
+
+          if [ -n "$FILES_TO_CHECK" ]; then
+            echo "📂 File yang diperiksa:"
+            echo "$FILES_TO_CHECK"
+
+            # Deteksi marker konflik
+            echo "$FILES_TO_CHECK" | xargs grep -Hn "<<<<<<<" && {
+              echo "🚨 Terdeteksi konflik! Tolong selesaikan sebelum merge."
+              exit 1
+            } || echo "✅ Tidak ada konflik yang ditemukan."
+          else
+            echo "✅ Tidak ada file PHP, JS, atau HTML yang diubah."
+          fi
           
   deployment:
     name: Deploy to Server
@@ -53,4 +73,6 @@ jobs:
 
       - name: Deploy to Production Server
         run: |
+          echo "🚀 Deploying to production..."
+          # Tambahkan perintah SSH atau deployment Anda di sini
           echo "✅ Success"
